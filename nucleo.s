@@ -1,3 +1,7 @@
+	.section .periph, "aw", %nobits
+	.global RCC
+RCC = 0x40023800
+
 	.section .vector_table, "a", %progbits
 	.global __vector_table
 __vector_table:
@@ -15,5 +19,7 @@ __stack_top:
 	.global __reset
         .thumb_func
 __reset:
+        bl main
+__end:
         wfi
-        b __reset
+        b __end
