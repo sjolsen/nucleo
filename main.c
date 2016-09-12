@@ -1,12 +1,12 @@
 #include <stdint.h>
 
-static inline __attribute__((always_inline))
-void __wfi(void)
-{
-  __asm__("wfi");
-}
+/* static inline __attribute__((always_inline)) */
+/* void __wfi(void) */
+/* { */
+/*   __asm__("wfi"); */
+/* } */
 
-struct RCC_CR
+struct __attribute__((packed)) RCC_CR
 {
   uint32_t HSION     : 1;
   uint32_t HSIRDY    : 1;
@@ -27,7 +27,7 @@ struct RCC_CR
   uint32_t           : 2;
 };
 
-struct RCC_PLLCFGR
+struct __attribute__((packed)) RCC_PLLCFGR
 {
   uint32_t PLLM   : 6;
   uint32_t PLLN   : 9;
@@ -55,14 +55,134 @@ enum
   RCC_PLLCFGR_PLLSRC_HSE = 1,
 };
 
-extern volatile struct
+struct __attribute__((packed)) RCC_CFGR
 {
+  uint32_t SW      : 2;
+  uint32_t SWS     : 2;
+  uint32_t HPRE    : 4;
+  uint32_t         : 2;
+  uint32_t PPRE1   : 3;
+  uint32_t PPRE2   : 3;
+  uint32_t RTCPRE  : 5;
+  uint32_t MCO1    : 2;
+  uint32_t         : 1;
+  uint32_t MCO1PRE : 3;
+  uint32_t MCO2PRE : 3;
+  uint32_t MCO2    : 2;
+};
+
+enum
+{
+  RCC_CFGR_SW_HSI   = 0,
+  RCC_CFGR_SW_HSE   = 1,
+  RCC_CFGR_SW_PLL_P = 2,
+  RCC_CFGR_SW_PLL_R = 3,
+};
+
+enum
+{
+  RCC_CFGR_HPRE_DIV1   = 0,
+  RCC_CFGR_HPRE_DIV2   = 8,
+  RCC_CFGR_HPRE_DIV4   = 9,
+  RCC_CFGR_HPRE_DIV8   = 10,
+  RCC_CFGR_HPRE_DIV16  = 11,
+  RCC_CFGR_HPRE_DIV64  = 12,
+  RCC_CFGR_HPRE_DIV128 = 13,
+  RCC_CFGR_HPRE_DIV256 = 14,
+  RCC_CFGR_HPRE_DIV512 = 15,
+};
+
+enum
+{
+  RCC_CFGR_PPRE_DIV1   = 0,
+  RCC_CFGR_PPRE_DIV2   = 4,
+  RCC_CFGR_PPRE_DIV4   = 5,
+  RCC_CFGR_PPRE_DIV8   = 6,
+  RCC_CFGR_PPRE_DIV16  = 7,
+};
+
+struct __attribute__((packed)) RCC
+{
+  /* 0x00 */
   struct RCC_CR      CR;
   struct RCC_PLLCFGR PLLCFGR;
-} RCC;
+  struct RCC_CFGR    CFGR;
+  uint32_t           CIR;
+
+  /* 0x10 */
+  uint32_t           AHB1RSTR;
+  uint32_t           AHB2RSTR;
+  uint32_t           AHB3RSTR;
+  uint32_t           reserved_0x1C;
+
+  /* 0x20 */
+  uint32_t           APB1RSTR;
+  uint32_t           APB2RSTR;
+  uint32_t           reserved_0x28;
+  uint32_t           reserved_0x2C;
+
+  /* 0x30 */
+  uint32_t           AHB1ENR;
+  uint32_t           AHB2ENR;
+  uint32_t           AHB3ENR;
+  uint32_t           reserved_0x3C;
+
+  /* 0x40 */
+  uint32_t           APB1ENR;
+  uint32_t           APB2ENR;
+  uint32_t           reserved_0x48;
+  uint32_t           reserved_0x4C;
+};
+
+extern volatile struct RCC RCC;
+
+enum
+{
+  GPIO_MODER_INPUT              = 0,
+  GPIO_MODER_OUTPUT             = 1,
+  GPIO_MODER_ALTERNATE_FUNCTION = 2,
+  GPIO_MODER_ANALOG             = 3,
+};
+
+enum
+{
+  GPIO_OTYPER_PUSH_PULL  = 0,
+  GPIO_OTYPER_OPEN_DRAIN = 1,
+};
+
+struct __attribute__((packed)) GPIO
+{
+  /* 0x00 */
+  uint32_t MODER;
+  uint32_t OTYPER;
+  uint32_t OSPEEDR;
+  uint32_t PUPDR;
+
+  /* 0x10 */
+  uint32_t IDR;
+  uint32_t ODR;
+  uint32_t BSRR;
+  uint32_t LCKR;
+
+  /* 0x20 */
+  uint32_t AFRL;
+  uint32_t AFRH;
+};
+
+extern volatile struct GPIO GPIOC;
 
 int main(void)
 {
+  /* -8<--- TODO: Document ------ */
+  {
+    // Enable 21.6 MHz MCO2 clock out
+    struct RCC_CFGR CFGR = RCC.CFGR;
+    CFGR.MCO2    = 0; // SYSCLK
+    CFGR.MCO2PRE = 7; // Divided by 5
+    RCC.CFGR = CFGR;
+  }
+  /* ------ TODO: Document --->8- */
+
   /*
    * Enable the HSE clock input.
    *
@@ -116,8 +236,66 @@ int main(void)
    * Turn the PLL on and wait for it to lock.
    */
   RCC.CR.PLLON = 1;
-  while (!RCC.CR.PLLRDY)
-    __wfi();
+  while (!RCC.CR.PLLRDY) {
+  }
+
+  /*
+   * Configure the system clock.
+   *
+   * The following frequencies are configured:
+   *
+   *   - System clock at 108 MHz
+   *   - AHB at 108 MHz
+   *   - APB1 at 27 MHz
+   *   - APB2 at 54 MHz
+   *   - RTC at 1 MHz
+   *
+   * The system and clock buses are run at the maximum speeds allowed
+   * by the PLL configuration. The RTC is run at the 1 MHz required by
+   * the RCC documentation.
+   */
+  {
+    #if 0
+    struct RCC_CFGR CFGR = RCC.CFGR;
+    CFGR.SW     = RCC_CFGR_SW_PLL_P;
+    CFGR.HPRE   = RCC_CFGR_HPRE_DIV1;
+    CFGR.PPRE1  = RCC_CFGR_PPRE_DIV4;
+    CFGR.PPRE2  = RCC_CFGR_PPRE_DIV2;
+    CFGR.RTCPRE = 8;
+    RCC.CFGR = CFGR;
+    #endif
+  }
+
+  /* -8<--- TODO: Document ------ */
+  {
+    // Enable and reset all the GPIO IP blocks
+    RCC.AHB1ENR  |= 0x000000FF;
+    RCC.AHB1RSTR |= 0x000000FF;
+    RCC.AHB1RSTR &= 0xFFFFFF00;
+    // Configure MCO2 (PC9) AF
+    // 1. MODER
+    // 2. OTYPER, PUPDR, OSPEEDR
+    // 3. AFRL, AFRH (AF0)
+    {
+      uint32_t MODER = GPIOC.MODER;
+      MODER &= ~(3 << 18);
+      MODER |= GPIO_MODER_ALTERNATE_FUNCTION << 18;
+      GPIOC.MODER = MODER;
+    }
+    {
+      uint32_t OTYPER = GPIOC.OTYPER;
+      OTYPER &= ~(1 << 9);
+      OTYPER |= GPIO_OTYPER_PUSH_PULL << 9;
+      GPIOC.OTYPER = OTYPER;
+    }
+    {
+      uint32_t AFRH = GPIOC.AFRH;
+      AFRH &= 15 << 4;
+      AFRH |= 0  << 4;
+      GPIOC.AFRH = AFRH;
+    }
+  }
+  /* ------ TODO: Document --->8- */
 
   return 0;
 }

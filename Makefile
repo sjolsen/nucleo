@@ -14,7 +14,7 @@ OBJDUMP=arm-none-eabi-objdump
 OBJDUMP_FLAGS=-Drth
 
 GDB=arm-none-eabi-gdb
-GDB_FLAGS=-x '.gdbinit'
+GDB_FLAGS=
 
 OPENOCD=openocd
 OPENOCD_FLAGS=-f openocd.cfg
@@ -28,10 +28,10 @@ objdump: nucleo.elf
 	$(OBJDUMP) $(OBJDUMP_FLAGS) nucleo.elf
 
 openocd:
-	$(OPENOCD) $(OPENOCD_FLAGS) -c "init; reset halt"
+	$(OPENOCD) $(OPENOCD_FLAGS) -c "init"
 
 flash: nucleo.elf
-	$(OPENOCD) $(OPENOCD_FLAGS) -c "init; reset halt; flash_elf $<"
+	$(OPENOCD) $(OPENOCD_FLAGS) -c "init; flash_elf $<; reset run; shutdown"
 
 gdb:
 	$(GDB) $(GDB_FLAGS)

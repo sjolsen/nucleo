@@ -1,6 +1,8 @@
 	.section .periph, "aw", %nobits
 	.global RCC
 RCC = 0x40023800
+	.global GPIOC
+GPIOC = 0x40020800
 
 	.section .vector_table, "a", %progbits
 	.global __vector_table
