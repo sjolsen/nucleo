@@ -8,7 +8,7 @@ AS=arm-none-eabi-as
 ASFLAGS=$(CPUFLAGS) $(FPUFLAGS)
 
 CC=arm-none-eabi-gcc
-CFLAGS=$(CPUFLAGS) $(FPUFLAGS) -ffreestanding -O2 -g
+CFLAGS=$(CPUFLAGS) $(FPUFLAGS) -ffreestanding -O2 -g -std=c11
 
 OBJDUMP=arm-none-eabi-objdump
 OBJDUMP_FLAGS=-Drth
