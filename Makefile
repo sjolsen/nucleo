@@ -22,7 +22,7 @@ OPENOCD_FLAGS=-f openocd.cfg
 .PHONY: all clean openocd gdb
 all: nucleo.elf
 clean:
-	rm nucleo.elf nucleo.o
+	rm nucleo.elf nucleo.o main.o
 
 objdump: nucleo.elf
 	$(OBJDUMP) $(OBJDUMP_FLAGS) nucleo.elf
