@@ -169,9 +169,11 @@ struct __attribute__((packed)) GPIO
   uint32_t AFRH;
 };
 
+extern volatile struct GPIO GPIOA;
 extern volatile struct GPIO GPIOC;
 
-int main(void)
+static
+void clock_init(void)
 {
   /* -8<--- TODO: Document ------ */
   {
@@ -265,37 +267,73 @@ int main(void)
     RCC.CFGR = CFGR;
     #endif
   }
+}
 
+static
+void gpio_init(void)
+{
   /* -8<--- TODO: Document ------ */
+  // Enable and reset all the GPIO IP blocks
+  RCC.AHB1ENR  |= 0x000000FF;
+  RCC.AHB1RSTR |= 0x000000FF;
+  RCC.AHB1RSTR &= 0xFFFFFF00;
+
+  // Configure MCO2 (PC9) AF
+  // 1. MODER
+  // 2. OTYPER, PUPDR, OSPEEDR
+  // 3. AFRL, AFRH (AF0)
   {
-    // Enable and reset all the GPIO IP blocks
-    RCC.AHB1ENR  |= 0x000000FF;
-    RCC.AHB1RSTR |= 0x000000FF;
-    RCC.AHB1RSTR &= 0xFFFFFF00;
-    // Configure MCO2 (PC9) AF
-    // 1. MODER
-    // 2. OTYPER, PUPDR, OSPEEDR
-    // 3. AFRL, AFRH (AF0)
-    {
-      uint32_t MODER = GPIOC.MODER;
-      MODER &= ~(3 << 18);
-      MODER |= GPIO_MODER_ALTERNATE_FUNCTION << 18;
-      GPIOC.MODER = MODER;
-    }
-    {
-      uint32_t OTYPER = GPIOC.OTYPER;
-      OTYPER &= ~(1 << 9);
-      OTYPER |= GPIO_OTYPER_PUSH_PULL << 9;
-      GPIOC.OTYPER = OTYPER;
-    }
-    {
-      uint32_t AFRH = GPIOC.AFRH;
-      AFRH &= 15 << 4;
-      AFRH |= 0  << 4;
-      GPIOC.AFRH = AFRH;
-    }
+    uint32_t MODER = GPIOC.MODER;
+    MODER &= ~(3 << 18);
+    MODER |= GPIO_MODER_ALTERNATE_FUNCTION << 18;
+    GPIOC.MODER = MODER;
+  }
+  {
+    uint32_t OTYPER = GPIOC.OTYPER;
+    OTYPER &= ~(1 << 9);
+    OTYPER |= GPIO_OTYPER_PUSH_PULL << 9;
+    GPIOC.OTYPER = OTYPER;
+  }
+  {
+    uint32_t AFRH = GPIOC.AFRH;
+    AFRH &= ~(15 << 4);
+    AFRH |= 0 << 4;
+    GPIOC.AFRH = AFRH;
+  }
+
+  // Configure USART2_TX (PA2) and USART2_RX (PA3)
+  // 1. MODER
+  // 2. OTYPER, PUPDR, OSPEEDR
+  // 3. AFRL, AFRH (AF7)
+  {
+    uint32_t MODER = GPIOA.MODER;
+    MODER &= ~(3 << 4);
+    MODER &= ~(3 << 6);
+    MODER |= GPIO_MODER_ALTERNATE_FUNCTION << 4;
+    MODER |= GPIO_MODER_ALTERNATE_FUNCTION << 6;
+    GPIOA.MODER = MODER;
+  }
+  {
+    uint32_t AFRL = GPIOA.AFRL;
+    AFRL &= ~(15 << 8);
+    AFRL &= ~(15 << 12);
+    AFRL |= 7 << 8;
+    AFRL |= 7 << 12;
+    GPIOA.AFRL = AFRL;
   }
   /* ------ TODO: Document --->8- */
+}
+
+static
+void uart_init(void)
+{
+}
+
+int main(void)
+{
+  clock_init();
+  gpio_init();
+  uart_init();
 
   return 0;
 }
