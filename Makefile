@@ -19,28 +19,43 @@ GDB_FLAGS=
 OPENOCD=openocd
 OPENOCD_FLAGS=-f openocd.cfg
 
-.PHONY: all clean openocd gdb
-all: nucleo.elf
-clean:
-	rm nucleo.elf nucleo.o main.o
+C_SOURCES:=$(shell find -name '*.c')
+S_SOURCES:=$(shell find -name '*.s')
 
-objdump: nucleo.elf
-	$(OBJDUMP) $(OBJDUMP_FLAGS) nucleo.elf
+BUILDDIR?=/tmp/nucleo-build
+
+C_OBJS:=$(addprefix $(BUILDDIR)/, $(addsuffix .o, $(C_SOURCES)))
+S_OBJS:=$(addprefix $(BUILDDIR)/, $(addsuffix .o, $(S_SOURCES)))
+
+DIRS:=$(addprefix $(BUILDDIR)/, $(shell find -type d -not -path './.git*'))
+OBJS:=$(C_OBJS) $(S_OBJS)
+ELF:=$(BUILDDIR)/nucleo.elf
+
+.PHONY: all clean openocd gdb
+all: $(ELF)
+clean:
+	rm -rf $(BUILDDIR)
+
+objdump: $(ELF)
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $(ELF)
 
 openocd:
 	$(OPENOCD) $(OPENOCD_FLAGS) -c "init"
 
-flash: nucleo.elf
+flash: $(ELF)
 	$(OPENOCD) $(OPENOCD_FLAGS) -c "init; flash_elf $<; reset run; shutdown"
 
 gdb:
 	$(GDB) $(GDB_FLAGS)
 
-nucleo.elf: Makefile nucleo.ld nucleo.o main.o
-	$(LD) $(LDFLAGS) -T nucleo.ld -o $@ nucleo.o main.o
+$(DIRS):
+	@mkdir -p $@
 
-nucleo.o: Makefile nucleo.s
-	$(AS) $(ASFLAGS) -o $@ nucleo.s
+$(ELF): Makefile nucleo.ld $(OBJS) $(DIRS)
+	$(LD) $(LDFLAGS) -T nucleo.ld -o $@ $(OBJS)
 
-main.o: Makefile main.c
-	$(CC) $(CFLAGS) -c -o $@ main.c
+$(C_OBJS):$(BUILDDIR)/%.c.o: %.c $(DIRS)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(S_OBJS):$(BUILDDIR)/%.s.o: %.s $(DIRS)
+	$(AS) $(ASFLAGS) -o $@ $<
