@@ -19,6 +19,7 @@ GDB_FLAGS=
 OPENOCD=openocd
 OPENOCD_FLAGS=-f openocd.cfg
 
+C_HEADERS:=$(shell find -name '*.h')
 C_SOURCES:=$(shell find -name '*.c')
 S_SOURCES:=$(shell find -name '*.s')
 
@@ -27,16 +28,16 @@ BUILDDIR?=/tmp/nucleo-build
 C_OBJS:=$(addprefix $(BUILDDIR)/, $(addsuffix .o, $(C_SOURCES)))
 S_OBJS:=$(addprefix $(BUILDDIR)/, $(addsuffix .o, $(S_SOURCES)))
 
-DIRS:=$(addprefix $(BUILDDIR)/, $(shell find -type d -not -path './.git*'))
 OBJS:=$(C_OBJS) $(S_OBJS)
 ELF:=$(BUILDDIR)/nucleo.elf
 
 .PHONY: all clean openocd gdb
 all: $(ELF)
+
 clean:
 	rm -rf $(BUILDDIR)
 
-objdump: $(ELF)
+objdump:
 	$(OBJDUMP) $(OBJDUMP_FLAGS) $(ELF)
 
 openocd:
@@ -48,14 +49,14 @@ flash: $(ELF)
 gdb:
 	$(GDB) $(GDB_FLAGS)
 
-$(DIRS):
-	@mkdir -p $@
-
 $(ELF): Makefile nucleo.ld $(OBJS) $(DIRS)
+	@mkdir -p $(@D)
 	$(LD) $(LDFLAGS) -T nucleo.ld -o $@ $(OBJS)
 
-$(C_OBJS):$(BUILDDIR)/%.c.o: %.c $(DIRS)
+$(C_OBJS):$(BUILDDIR)/%.c.o: %.c $(C_HEADERS) $(DIRS)
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(S_OBJS):$(BUILDDIR)/%.s.o: %.s $(DIRS)
+	@mkdir -p $(@D)
 	$(AS) $(ASFLAGS) -o $@ $<
