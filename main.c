@@ -6,13 +6,6 @@
 #define CONFIG_CLOCKSOURCE_PLL
 
 static
-bool clock_pll_ready(void)
-{
-  union RCC_CR CR = {.raw = RCC.CR};
-  return CR.PLLRDY;
-}
-
-static
 void clock_init(void)
 {
   /* -8<--- TODO: Document ------ */
@@ -37,18 +30,23 @@ void clock_init(void)
     CR.HSEBYP = 1;
     CR.HSEON  = 1;
     RCC.CR = CR.raw;
+
+    do CR.raw = RCC.CR;
+    while (!CR.HSERDY);
   }
 
   /*
    * Configure the PLL.
    *
-   * The VCO clock is set to 432 MHz. To this end, we have:
+   * The VCO clock is set to 432 MHz, using the 8 MHz HSE input
+   * divided down to 2 MHz per the datasheet's recommendation. To this
+   * end, we have:
    *
    *   f(VCO clock) = f(PLL clock input) * (PLLN / PLLM)
    *   432 MHz = 8 MHz * (PLLN / PLLM)
    *   (PLLN / PLLM) = 54
-   *   PLLM = 8
-   *   PLLN = 432
+   *   PLLM = 4
+   *   PLLN = 216
    *
    * The system clock output is set to 108 MHz. To this end, we have:
    *
@@ -66,8 +64,8 @@ void clock_init(void)
    */
   {
     union RCC_PLLCFGR PLLCFGR = {.raw = RCC.PLLCFGR};
-    PLLCFGR.PLLM   = 8;
-    PLLCFGR.PLLN   = 432;
+    PLLCFGR.PLLM   = 4;
+    PLLCFGR.PLLN   = 216;
     PLLCFGR.PLLP   = RCC_PLLCFGR_PLLP_DIV4;
     PLLCFGR.PLLSRC = RCC_PLLCFGR_PLLSRC_HSE;
     PLLCFGR.PLLQ   = 9;
@@ -81,8 +79,9 @@ void clock_init(void)
     union RCC_CR CR = {.raw = RCC.CR};
     CR.PLLON = 1;
     RCC.CR = CR.raw;
-  }
-  while (!clock_pll_ready()) {
+
+    do CR.raw = RCC.CR;
+    while (!CR.PLLRDY);
   }
 
   /*
@@ -91,25 +90,22 @@ void clock_init(void)
    * The following frequencies are configured:
    *
    *   - System clock at 108 MHz
-   *   - AHB at 27 MHz
+   *   - AHB at 108 MHz
    *   - APB1 at 27 MHz
-   *   - APB2 at 27 MHz
+   *   - APB2 at 54 MHz
    *   - RTC at 1 MHz
    *
-   * The system clock is run at the maximum speed allowed by the PLL
-   * configuration. The processor reads garbage from the instruction
-   * bus if the AHB prescaler is set to 1 or 2, but 4 works. The APB
-   * clocks are set to the maximum values allowed by this choice of
-   * AHB clock. The RTC is run at the 1 MHz required by the RCC
-   * documentation.
+   * The system and clock buses are run at the maximum speeds allowed
+   * by the PLL configuration. The RTC is run at the 1 MHz required by
+   * the RCC documentation.
    */
   {
     #ifdef CONFIG_CLOCKSOURCE_PLL
     union RCC_CFGR CFGR = {.raw = RCC.CFGR};
     CFGR.SW     = RCC_CFGR_SW_PLL_P;
-    CFGR.HPRE   = RCC_CFGR_HPRE_DIV4;
-    CFGR.PPRE1  = RCC_CFGR_PPRE_DIV1;
-    CFGR.PPRE2  = RCC_CFGR_PPRE_DIV1;
+    CFGR.HPRE   = RCC_CFGR_HPRE_DIV1;
+    CFGR.PPRE1  = RCC_CFGR_PPRE_DIV4;
+    CFGR.PPRE2  = RCC_CFGR_PPRE_DIV2;
     CFGR.RTCPRE = 8;
     RCC.CFGR = CFGR.raw;
     #endif
@@ -230,17 +226,12 @@ void uart_init(void)
 }
 
 static
-bool uart_tx_empty(void)
-{
-  union USART_SR SR = {.raw = USART2.SR};
-  return SR.TXE;
-}
-
-static
 void uart_write(uint8_t byte)
 {
-  while (!uart_tx_empty()) {
-  }
+  union USART_SR SR;
+
+  do SR.raw = USART2.SR;
+  while (!SR.TXE);
 
   USART2.DR = byte;
 }
