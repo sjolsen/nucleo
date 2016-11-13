@@ -73,7 +73,7 @@ void uart_init(void)
   }
 
   // All clocks are 16 MHz at reset. We want 115200 baud.
-  // Tx/Rx baud = fCK / (8 × (2 – OVER8) × USARTDIV)
+  // Tx/Rx baud = fCK / (8 × (2 - OVER8) × USARTDIV)
   // 115200 = 16000000 / (16 * USARTDIV)
   // USARTDIV = 8.68
   {
