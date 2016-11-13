@@ -25,6 +25,9 @@ uint32_t __read_ipsr(void)
   return result;
 }
 
+__attribute__((noreturn))
+void halt(void);
+
 /* --- Exception handling --- */
 
 struct __attribute__((packed)) armv7m_exception_frame

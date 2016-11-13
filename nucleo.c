@@ -2,15 +2,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-static __attribute__((naked)) __attribute__((noreturn))
-void __reset(void)
+__attribute__((noreturn))
+void halt(void)
 {
-  volatile int __attribute__((unused)) rv = main();
-
   while (true) {
     __dsb();
     __wfi();
   }
+}
+
+static __attribute__((naked)) __attribute__((noreturn))
+void __reset(void)
+{
+  main();
+  halt();
 }
 
 DECLARE_ISR(__default_handler, default_handler);
