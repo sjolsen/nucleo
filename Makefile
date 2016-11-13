@@ -49,14 +49,14 @@ flash: $(ELF)
 gdb:
 	$(GDB) $(GDB_FLAGS)
 
-$(ELF): Makefile nucleo.ld $(OBJS) $(DIRS)
+$(ELF): nucleo.ld $(OBJS) $(DIRS) Makefile
 	@mkdir -p $(@D)
 	$(LD) $(LDFLAGS) -T nucleo.ld -o $@ $(OBJS)
 
-$(C_OBJS):$(BUILDDIR)/%.c.o: %.c $(C_HEADERS) $(DIRS)
+$(C_OBJS):$(BUILDDIR)/%.c.o: %.c $(C_HEADERS) $(DIRS) Makefile
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(S_OBJS):$(BUILDDIR)/%.s.o: %.s $(DIRS)
+$(S_OBJS):$(BUILDDIR)/%.s.o: %.s $(DIRS) Makefile
 	@mkdir -p $(@D)
 	$(AS) $(ASFLAGS) -o $@ $<
