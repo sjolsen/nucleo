@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-union __attribute__((packed)) USART_SR
+union USART_SR
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t PE   : 1;
     uint32_t FE   : 1;
     uint32_t NF   : 1;
@@ -21,18 +21,18 @@ union __attribute__((packed)) USART_SR
   uint32_t raw;
 };
 
-union __attribute__((packed)) USART_DR
+union USART_DR
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t DR : 9;
     uint32_t    : 23;
   };
   uint32_t raw;
 };
 
-union __attribute__((packed)) USART_BRR
+union USART_BRR
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t FRACTION : 4;
     uint32_t MANTISSA : 12;
     uint32_t          : 16;
@@ -40,9 +40,9 @@ union __attribute__((packed)) USART_BRR
   uint32_t raw;
 };
 
-union __attribute__((packed)) USART_CR1
+union USART_CR1
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t SBK    : 1;
     uint32_t RWU    : 1;
     uint32_t RE     : 1;
@@ -64,9 +64,9 @@ union __attribute__((packed)) USART_CR1
   uint32_t raw;
 };
 
-union __attribute__((packed)) USART_CR2
+union USART_CR2
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t ADD   : 4;
     uint32_t       : 1;
     uint32_t LBDL  : 1;
@@ -83,9 +83,9 @@ union __attribute__((packed)) USART_CR2
   uint32_t raw;
 };
 
-union __attribute__((packed)) USART_CR3
+union USART_CR3
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t EIE    : 1;
     uint32_t IREN   : 1;
     uint32_t IRLP   : 1;
@@ -103,9 +103,9 @@ union __attribute__((packed)) USART_CR3
   uint32_t raw;
 };
 
-union __attribute__((packed)) USART_GTPR
+union USART_GTPR
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t PSC : 8;
     uint32_t GT  : 8;
     uint32_t     : 16;
@@ -113,7 +113,7 @@ union __attribute__((packed)) USART_GTPR
   uint32_t raw;
 };
 
-struct __attribute__((packed)) USART
+struct USART
 {
   /* 0x00 */
   uint32_t SR;

@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-union __attribute__((packed)) RCC_CR
+union RCC_CR
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t HSION     : 1;
     uint32_t HSIRDY    : 1;
     uint32_t           : 1;
@@ -27,9 +27,9 @@ union __attribute__((packed)) RCC_CR
   uint32_t raw;
 };
 
-union __attribute__((packed)) RCC_PLLCFGR
+union RCC_PLLCFGR
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t PLLM   : 6;
     uint32_t PLLN   : 9;
     uint32_t        : 1;
@@ -58,9 +58,9 @@ enum
   RCC_PLLCFGR_PLLSRC_HSE = 1,
 };
 
-union __attribute__((packed)) RCC_CFGR
+union RCC_CFGR
 {
-  struct __attribute__((packed)) {
+  struct {
     uint32_t SW      : 2;
     uint32_t SWS     : 2;
     uint32_t HPRE    : 4;
@@ -107,7 +107,7 @@ enum
   RCC_CFGR_PPRE_DIV16  = 7,
 };
 
-struct __attribute__((packed)) RCC
+struct RCC
 {
   /* 0x00 */
   uint32_t CR;

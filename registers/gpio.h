@@ -17,7 +17,7 @@ enum
   GPIO_OTYPER_OPEN_DRAIN = 1,
 };
 
-struct __attribute__((packed)) GPIO
+struct GPIO
 {
   /* 0x00 */
   uint32_t MODER;
