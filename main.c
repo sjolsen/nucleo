@@ -1,10 +1,11 @@
 #include "nucleo.h"
+#include "registers/flash.h"
 #include "registers/gpio.h"
 #include "registers/usart.h"
 #include "registers/rcc.h"
 #include <stdbool.h>
 
-/* #define CONFIG_CLOCKSOURCE_PLL */
+#define CONFIG_CLOCKSOURCE_PLL
 
 static
 void clock_init(void)
@@ -13,7 +14,7 @@ void clock_init(void)
   {
     // Enable 21.6 MHz MCO2 clock out
     struct RCC_CFGR CFGR = RCC.CFGR;
-    CFGR.MCO2    = 3; // PLL
+    CFGR.MCO2    = 0; // SYSCLK
     CFGR.MCO2PRE = 7; // Divided by 5
     RCC.CFGR = CFGR;
   }
@@ -85,6 +86,33 @@ void clock_init(void)
     while (!CR.PLLRDY);
   }
 
+  #ifdef CONFIG_CLOCKSOURCE_PLL
+  /*
+   * Configure the flash memory read interface.
+   *
+   * The number of flash memory read wait states must be programmed
+   * according to the table in the reference manual before
+   * reconfiguring the AHB clock to ensure correct operation.
+   *
+   * At 3.3 V (Vdd on the Nucleo board), the flash memory supports AHB
+   * speeds in the range:
+   *
+   *   N × 30 MHz < f(HCLK) ≤ (N + 1) × 30 MHz,
+   *
+   * where N is the number of wait states programmed in the LATENCY
+   * field of the FLASH_ACR register. We program the AHB below to run
+   * at 108 MHz, so we configure the flash memory interface for three
+   * wait states.
+   */
+  {
+    struct FLASH_ACR ACR = FLASH.ACR;
+    ACR.LATENCY = 3;
+    FLASH.ACR = ACR;
+
+    do ACR = FLASH.ACR;
+    while (ACR.LATENCY != 3);
+  }
+
   /*
    * Configure the system clock.
    *
@@ -101,7 +129,6 @@ void clock_init(void)
    * the RCC documentation.
    */
   {
-    #ifdef CONFIG_CLOCKSOURCE_PLL
     struct RCC_CFGR CFGR = RCC.CFGR;
     CFGR.SW     = RCC_CFGR_SW_PLL_P;
     CFGR.HPRE   = RCC_CFGR_HPRE_DIV1;
@@ -109,8 +136,8 @@ void clock_init(void)
     CFGR.PPRE2  = RCC_CFGR_PPRE_DIV2;
     CFGR.RTCPRE = 8;
     RCC.CFGR = CFGR;
-    #endif
   }
+  #endif
 }
 
 static
@@ -262,7 +289,10 @@ int main(void)
   gpio_init();
   uart_init();
 
-  uart_puts("Hello, STM\n");
+  uart_puts("RCC.CFGR.SWS = ");
+  uart_write('0' + RCC.CFGR.SWS);
+  uart_puts("\n");
+
 
   return 0;
 }
