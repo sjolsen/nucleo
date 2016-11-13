@@ -7,7 +7,7 @@
 
 #define CONFIG_CLOCKSOURCE_PLL
 
-extern __attribute__((noinline))
+static
 void clock_init(void)
 {
   /* -8<--- TODO: Document ------ */
@@ -140,7 +140,7 @@ void clock_init(void)
   #endif
 }
 
-extern __attribute__((noinline))
+static
 void gpio_init(void)
 {
   /* -8<--- TODO: Document ------ */
@@ -195,7 +195,7 @@ void gpio_init(void)
   /* ------ TODO: Document --->8- */
 }
 
-extern __attribute__((noinline))
+static
 void uart_init(void)
 {
   // USART2 runs off the APB1 clock domain
@@ -253,7 +253,7 @@ void uart_init(void)
   }
 }
 
-extern __attribute__((noinline))
+static
 void uart_write(uint8_t byte)
 {
   struct USART_SR SR;
@@ -264,7 +264,7 @@ void uart_write(uint8_t byte)
   USART2.DR.DR = byte;
 }
 
-extern __attribute__((noinline))
+static
 void uart_puts(const char* str)
 {
   for (const char* p = str; *p != '\0'; ++p) {
@@ -284,7 +284,6 @@ int main(void)
   uart_write('0' + RCC.CFGR.SWS);
   uart_puts("\n");
 
-  __asm__("swi #0");
 
   return 0;
 }
