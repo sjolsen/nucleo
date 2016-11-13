@@ -3,45 +3,39 @@
 
 #include <stdint.h>
 
-union RCC_CR
+struct RCC_CR
 {
-  struct {
-    uint32_t HSION     : 1;
-    uint32_t HSIRDY    : 1;
-    uint32_t           : 1;
-    uint32_t HSITRIM   : 5;
-    uint32_t HSICAL    : 8;
-    uint32_t HSEON     : 1;
-    uint32_t HSERDY    : 1;
-    uint32_t HSEBYP    : 1;
-    uint32_t CSSON     : 1;
-    uint32_t           : 4;
-    uint32_t PLLON     : 1;
-    uint32_t PLLRDY    : 1;
-    uint32_t PLLI2SON  : 1;
-    uint32_t PLLI2SRDY : 1;
-    uint32_t PLLSAION  : 1;
-    uint32_t PLLSAIRDY : 1;
-    uint32_t           : 2;
-  };
-  uint32_t raw;
+  uint32_t HSION     : 1;
+  uint32_t HSIRDY    : 1;
+  uint32_t           : 1;
+  uint32_t HSITRIM   : 5;
+  uint32_t HSICAL    : 8;
+  uint32_t HSEON     : 1;
+  uint32_t HSERDY    : 1;
+  uint32_t HSEBYP    : 1;
+  uint32_t CSSON     : 1;
+  uint32_t           : 4;
+  uint32_t PLLON     : 1;
+  uint32_t PLLRDY    : 1;
+  uint32_t PLLI2SON  : 1;
+  uint32_t PLLI2SRDY : 1;
+  uint32_t PLLSAION  : 1;
+  uint32_t PLLSAIRDY : 1;
+  uint32_t           : 2;
 };
 
-union RCC_PLLCFGR
+struct RCC_PLLCFGR
 {
-  struct {
-    uint32_t PLLM   : 6;
-    uint32_t PLLN   : 9;
-    uint32_t        : 1;
-    uint32_t PLLP   : 2;
-    uint32_t        : 4;
-    uint32_t PLLSRC : 1;
-    uint32_t        : 1;
-    uint32_t PLLQ   : 4;
-    uint32_t PLLR   : 3;
-    uint32_t        : 1;
-  };
-  uint32_t raw;
+  uint32_t PLLM   : 6;
+  uint32_t PLLN   : 9;
+  uint32_t        : 1;
+  uint32_t PLLP   : 2;
+  uint32_t        : 4;
+  uint32_t PLLSRC : 1;
+  uint32_t        : 1;
+  uint32_t PLLQ   : 4;
+  uint32_t PLLR   : 3;
+  uint32_t        : 1;
 };
 
 enum
@@ -58,23 +52,20 @@ enum
   RCC_PLLCFGR_PLLSRC_HSE = 1,
 };
 
-union RCC_CFGR
+struct RCC_CFGR
 {
-  struct {
-    uint32_t SW      : 2;
-    uint32_t SWS     : 2;
-    uint32_t HPRE    : 4;
-    uint32_t         : 2;
-    uint32_t PPRE1   : 3;
-    uint32_t PPRE2   : 3;
-    uint32_t RTCPRE  : 5;
-    uint32_t MCO1    : 2;
-    uint32_t         : 1;
-    uint32_t MCO1PRE : 3;
-    uint32_t MCO2PRE : 3;
-    uint32_t MCO2    : 2;
-  };
-  uint32_t raw;
+  uint32_t SW      : 2;
+  uint32_t SWS     : 2;
+  uint32_t HPRE    : 4;
+  uint32_t         : 2;
+  uint32_t PPRE1   : 3;
+  uint32_t PPRE2   : 3;
+  uint32_t RTCPRE  : 5;
+  uint32_t MCO1    : 2;
+  uint32_t         : 1;
+  uint32_t MCO1PRE : 3;
+  uint32_t MCO2PRE : 3;
+  uint32_t MCO2    : 2;
 };
 
 enum
@@ -110,9 +101,9 @@ enum
 struct RCC
 {
   /* 0x00 */
-  uint32_t CR;
-  uint32_t PLLCFGR;
-  uint32_t CFGR;
+  struct RCC_CR CR;
+  struct RCC_PLLCFGR PLLCFGR;
+  struct RCC_CFGR CFGR;
   uint32_t CIR;
 
   /* 0x10 */

@@ -68,9 +68,9 @@ void uart_init(void)
   RCC.APB1RSTR &= ~(1 << 17);
 
   {
-    union USART_CR1 CR1 = {.raw = USART2.CR1};
+    struct USART_CR1 CR1 = USART2.CR1;
     CR1.UE = 0;
-    USART2.CR1 = CR1.raw;
+    USART2.CR1 = CR1;
   }
 
   // All clocks are 16 MHz at reset. We want 115200 baud.
@@ -78,36 +78,36 @@ void uart_init(void)
   // 115200 = 16000000 / (16 * USARTDIV)
   // USARTDIV = 8.68
   {
-    union USART_BRR BRR = {.raw = USART2.BRR};
+    struct USART_BRR BRR = USART2.BRR;
     BRR.MANTISSA = 8;
     BRR.FRACTION = 11;
-    USART2.BRR = BRR.raw;
+    USART2.BRR = BRR;
   }
   {
-    union USART_CR1 CR1 = {.raw = USART2.CR1};
+    struct USART_CR1 CR1 = USART2.CR1;
     CR1.M   = 0;
     CR1.PCE = 0;
     CR1.TE  = 1;
     CR1.RE  = 1;
-    USART2.CR1 = CR1.raw;
+    USART2.CR1 = CR1;
   }
   {
-    union USART_CR2 CR2 = {.raw = USART2.CR2};
+    struct USART_CR2 CR2 = USART2.CR2;
     CR2.STOP = 0;
-    USART2.CR2 = CR2.raw;
+    USART2.CR2 = CR2;
   }
 
   {
-    union USART_CR1 CR1 = {.raw = USART2.CR1};
+    struct USART_CR1 CR1 = USART2.CR1;
     CR1.UE = 1;
-    USART2.CR1 = CR1.raw;
+    USART2.CR1 = CR1;
   }
 }
 
 static
 bool uart_tx_empty(void)
 {
-  union USART_SR SR = {.raw = USART2.SR};
+  struct USART_SR SR = USART2.SR;
   return SR.TXE;
 }
 
@@ -117,7 +117,7 @@ void uart_write(uint8_t byte)
   while (!uart_tx_empty()) {
   }
 
-  USART2.DR = byte;
+  USART2.DR.DR = byte;
 }
 
 static
