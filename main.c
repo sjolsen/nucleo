@@ -1,3 +1,4 @@
+#include "nucleo.h"
 #include "registers/gpio.h"
 #include "registers/usart.h"
 #include "registers/rcc.h"
@@ -129,6 +130,15 @@ void uart_puts(const char* str)
   }
 }
 
+static __attribute__((noreturn))
+void halt(void)
+{
+  while (true) {
+    __dsb();
+    __wfi();
+  }
+}
+
 int main(void)
 {
   gpio_init();
@@ -137,4 +147,15 @@ int main(void)
   uart_puts("Hello, STM\n");
 
   return 0;
+}
+
+void default_handler(__attribute__((unused)) struct armv7m_exception_frame* frame,
+                     __attribute__((unused)) uint32_t* exc_return)
+{
+  halt();
+}
+
+void handle_irq(__attribute__((unused)) uint32_t irq)
+{
+  halt();
 }
