@@ -31,6 +31,8 @@ S_OBJS:=$(addprefix $(BUILDDIR)/, $(addsuffix .o, $(S_SOURCES)))
 OBJS:=$(C_OBJS) $(S_OBJS)
 ELF:=$(BUILDDIR)/nucleo.elf
 
+OBJDUMP_TARGET?=$(ELF)
+
 .PHONY: all clean openocd gdb
 all: $(ELF)
 
@@ -38,7 +40,7 @@ clean:
 	rm -rf $(BUILDDIR)
 
 objdump:
-	$(OBJDUMP) $(OBJDUMP_FLAGS) $(ELF)
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $(OBJDUMP_TARGET)
 
 openocd:
 	$(OPENOCD) $(OPENOCD_FLAGS) -c "init"
