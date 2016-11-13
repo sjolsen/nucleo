@@ -8,7 +8,7 @@ AS=arm-none-eabi-as
 ASFLAGS=$(CPUFLAGS) $(FPUFLAGS)
 
 CC=arm-none-eabi-gcc
-CFLAGS=$(CPUFLAGS) $(FPUFLAGS) -ffreestanding -O2 -g -std=c11
+CFLAGS=$(CPUFLAGS) $(FPUFLAGS) -ffreestanding -O2 -g -std=c11 -Wall -Wextra -Werror
 
 OBJDUMP=arm-none-eabi-objdump
 OBJDUMP_FLAGS=-Drth
@@ -31,6 +31,8 @@ S_OBJS:=$(addprefix $(BUILDDIR)/, $(addsuffix .o, $(S_SOURCES)))
 OBJS:=$(C_OBJS) $(S_OBJS)
 ELF:=$(BUILDDIR)/nucleo.elf
 
+OBJDUMP_TARGET?=$(ELF)
+
 .PHONY: all clean openocd gdb
 all: $(ELF)
 
@@ -38,7 +40,7 @@ clean:
 	rm -rf $(BUILDDIR)
 
 objdump:
-	$(OBJDUMP) $(OBJDUMP_FLAGS) $(ELF)
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $(OBJDUMP_TARGET)
 
 openocd:
 	$(OPENOCD) $(OPENOCD_FLAGS) -c "init"
@@ -49,14 +51,14 @@ flash: $(ELF)
 gdb:
 	$(GDB) $(GDB_FLAGS)
 
-$(ELF): Makefile nucleo.ld $(OBJS) $(DIRS)
+$(ELF): nucleo.ld $(OBJS) $(DIRS) Makefile
 	@mkdir -p $(@D)
 	$(LD) $(LDFLAGS) -T nucleo.ld -o $@ $(OBJS)
 
-$(C_OBJS):$(BUILDDIR)/%.c.o: %.c $(C_HEADERS) $(DIRS)
+$(C_OBJS):$(BUILDDIR)/%.c.o: %.c $(C_HEADERS) $(DIRS) Makefile
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(S_OBJS):$(BUILDDIR)/%.s.o: %.s $(DIRS)
+$(S_OBJS):$(BUILDDIR)/%.s.o: %.s $(DIRS) Makefile
 	@mkdir -p $(@D)
 	$(AS) $(ASFLAGS) -o $@ $<

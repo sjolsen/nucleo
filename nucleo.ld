@@ -25,7 +25,9 @@ SECTIONS
 
         .stack (NOLOAD) : ALIGN(8)
         {
-                *(.stack)
+                __stack_bottom = .;
+                . += 0x1000;
+                __stack_top = .;
         } >SRAM
 
         .periph (NOLOAD) :

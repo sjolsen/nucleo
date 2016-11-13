@@ -1,9 +1,10 @@
+#include "nucleo.h"
 #include "registers/gpio.h"
 #include "registers/usart.h"
 #include "registers/rcc.h"
 #include <stdbool.h>
 
-#define CONFIG_CLOCKSOURCE_PLL
+/* #define CONFIG_CLOCKSOURCE_PLL */
 
 static
 void clock_init(void)
@@ -11,10 +12,10 @@ void clock_init(void)
   /* -8<--- TODO: Document ------ */
   {
     // Enable 21.6 MHz MCO2 clock out
-    union RCC_CFGR CFGR = {.raw = RCC.CFGR};
+    struct RCC_CFGR CFGR = RCC.CFGR;
     CFGR.MCO2    = 3; // PLL
     CFGR.MCO2PRE = 7; // Divided by 5
-    RCC.CFGR = CFGR.raw;
+    RCC.CFGR = CFGR;
   }
   /* ------ TODO: Document --->8- */
 
@@ -26,12 +27,12 @@ void clock_init(void)
    * directly.
    */
   {
-    union RCC_CR CR = {.raw = RCC.CR};
+    struct RCC_CR CR = RCC.CR;
     CR.HSEBYP = 1;
     CR.HSEON  = 1;
-    RCC.CR = CR.raw;
+    RCC.CR = CR;
 
-    do CR.raw = RCC.CR;
+    do CR = RCC.CR;
     while (!CR.HSERDY);
   }
 
@@ -63,24 +64,24 @@ void clock_init(void)
    * The I2S/SPDIF-Rx output is left in its reset configuration.
    */
   {
-    union RCC_PLLCFGR PLLCFGR = {.raw = RCC.PLLCFGR};
+    struct RCC_PLLCFGR PLLCFGR = RCC.PLLCFGR;
     PLLCFGR.PLLM   = 4;
     PLLCFGR.PLLN   = 216;
     PLLCFGR.PLLP   = RCC_PLLCFGR_PLLP_DIV4;
     PLLCFGR.PLLSRC = RCC_PLLCFGR_PLLSRC_HSE;
     PLLCFGR.PLLQ   = 9;
-    RCC.PLLCFGR = PLLCFGR.raw;
+    RCC.PLLCFGR = PLLCFGR;
   }
 
   /*
    * Turn the PLL on and wait for it to lock.
    */
   {
-    union RCC_CR CR = {.raw = RCC.CR};
+    struct RCC_CR CR = RCC.CR;
     CR.PLLON = 1;
-    RCC.CR = CR.raw;
+    RCC.CR = CR;
 
-    do CR.raw = RCC.CR;
+    do CR = RCC.CR;
     while (!CR.PLLRDY);
   }
 
@@ -101,13 +102,13 @@ void clock_init(void)
    */
   {
     #ifdef CONFIG_CLOCKSOURCE_PLL
-    union RCC_CFGR CFGR = {.raw = RCC.CFGR};
+    struct RCC_CFGR CFGR = RCC.CFGR;
     CFGR.SW     = RCC_CFGR_SW_PLL_P;
     CFGR.HPRE   = RCC_CFGR_HPRE_DIV1;
     CFGR.PPRE1  = RCC_CFGR_PPRE_DIV4;
     CFGR.PPRE2  = RCC_CFGR_PPRE_DIV2;
     CFGR.RTCPRE = 8;
-    RCC.CFGR = CFGR.raw;
+    RCC.CFGR = CFGR;
     #endif
   }
 }
@@ -176,64 +177,64 @@ void uart_init(void)
   RCC.APB1RSTR &= ~(1 << 17);
 
   {
-    union USART_CR1 CR1 = {.raw = USART2.CR1};
+    struct USART_CR1 CR1 = USART2.CR1;
     CR1.UE = 0;
-    USART2.CR1 = CR1.raw;
+    USART2.CR1 = CR1;
   }
 
   #ifdef CONFIG_CLOCKSOURCE_PLL
   // APB1 clock is configured at 27 MHz. We want 115200 baud.
-  // Tx/Rx baud = fCK / (8 × (2 – OVER8) × USARTDIV)
+  // Tx/Rx baud = fCK / (8 × (2 - OVER8) × USARTDIV)
   // 115200 = 27000000 / (16 * USARTDIV)
   // USARTDIV = 14.65
   {
-    union USART_BRR BRR = {.raw = USART2.BRR};
+    struct USART_BRR BRR = USART2.BRR;
     BRR.MANTISSA = 14;
     BRR.FRACTION = 10;
-    USART2.BRR = BRR.raw;
+    USART2.BRR = BRR;
   }
   #else
   // All clocks are 16 MHz at reset. We want 115200 baud.
-  // Tx/Rx baud = fCK / (8 × (2 – OVER8) × USARTDIV)
+  // Tx/Rx baud = fCK / (8 × (2 - OVER8) × USARTDIV)
   // 115200 = 16000000 / (16 * USARTDIV)
   // USARTDIV = 8.68
   {
-    union USART_BRR BRR = {.raw = USART2.BRR};
+    struct USART_BRR BRR = USART2.BRR;
     BRR.MANTISSA = 8;
     BRR.FRACTION = 11;
-    USART2.BRR = BRR.raw;
+    USART2.BRR = BRR;
   }
   #endif
   {
-    union USART_CR1 CR1 = {.raw = USART2.CR1};
+    struct USART_CR1 CR1 = USART2.CR1;
     CR1.M   = 0;
     CR1.PCE = 0;
     CR1.TE  = 1;
     CR1.RE  = 1;
-    USART2.CR1 = CR1.raw;
+    USART2.CR1 = CR1;
   }
   {
-    union USART_CR2 CR2 = {.raw = USART2.CR2};
+    struct USART_CR2 CR2 = USART2.CR2;
     CR2.STOP = 0;
-    USART2.CR2 = CR2.raw;
+    USART2.CR2 = CR2;
   }
 
   {
-    union USART_CR1 CR1 = {.raw = USART2.CR1};
+    struct USART_CR1 CR1 = USART2.CR1;
     CR1.UE = 1;
-    USART2.CR1 = CR1.raw;
+    USART2.CR1 = CR1;
   }
 }
 
 static
 void uart_write(uint8_t byte)
 {
-  union USART_SR SR;
+  struct USART_SR SR;
 
-  do SR.raw = USART2.SR;
+  do SR = USART2.SR;
   while (!SR.TXE);
 
-  USART2.DR = byte;
+  USART2.DR.DR = byte;
 }
 
 static
@@ -246,6 +247,15 @@ void uart_puts(const char* str)
   }
 }
 
+static __attribute__((noreturn))
+void halt(void)
+{
+  while (true) {
+    __dsb();
+    __wfi();
+  }
+}
+
 int main(void)
 {
   clock_init();
@@ -255,4 +265,15 @@ int main(void)
   uart_puts("Hello, STM\n");
 
   return 0;
+}
+
+void default_handler(__attribute__((unused)) struct armv7m_exception_frame* frame,
+                     __attribute__((unused)) uint32_t* exc_return)
+{
+  halt();
+}
+
+void handle_irq(__attribute__((unused)) uint32_t irq)
+{
+  halt();
 }
