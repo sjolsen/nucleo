@@ -32,6 +32,10 @@ SECTIONS
 
         .periph (NOLOAD) :
         {
-                *(.periph)
+                USART2 = 0x00004400;
+                GPIOA  = 0x00020000;
+                GPIOC  = 0x00020800;
+                RCC    = 0x00023800;
+                FLASH  = 0x00023C00;
         } >PERIPH
 }
