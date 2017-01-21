@@ -1,10 +1,13 @@
-#ifndef REGISTERS_FLASH_H
-#define REGISTERS_FLASH_H
+#ifndef REGISTERS_FLASH_HH
+#define REGISTERS_FLASH_HH
 
+#include "registers/register.hh"
 #include <stdint.h>
 
 struct FLASH_ACR
 {
+  using register_type = uint32_t;
+
   uint32_t LATENCY : 4;
   uint32_t         : 4;
   uint32_t PRFTEN  : 1;
@@ -18,7 +21,7 @@ struct FLASH_ACR
 struct FLASH
 {
   /* 0x00 */
-  struct FLASH_ACR ACR;
+  Register<struct FLASH_ACR> ACR;
   uint32_t KEYR;
   uint32_t OPTKEYR;
   uint32_t SR;
@@ -28,6 +31,6 @@ struct FLASH
   uint32_t OPTCR;
 };
 
-extern volatile struct FLASH FLASH;
+extern "C" volatile struct FLASH FLASH;
 
 #endif

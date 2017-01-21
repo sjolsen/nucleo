@@ -1,10 +1,13 @@
 #ifndef REGISTERS_USART_H
 #define REGISTERS_USART_H
 
+#include "registers/register.hh"
 #include <stdint.h>
 
 struct USART_SR
 {
+  using register_type = uint32_t;
+
   uint32_t PE   : 1;
   uint32_t FE   : 1;
   uint32_t NF   : 1;
@@ -20,12 +23,16 @@ struct USART_SR
 
 struct USART_DR
 {
+  using register_type = uint32_t;
+
   uint32_t DR : 9;
   uint32_t    : 23;
 };
 
 struct USART_BRR
 {
+  using register_type = uint32_t;
+
   uint32_t FRACTION : 4;
   uint32_t MANTISSA : 12;
   uint32_t          : 16;
@@ -33,6 +40,8 @@ struct USART_BRR
 
 struct USART_CR1
 {
+  using register_type = uint32_t;
+
   uint32_t SBK    : 1;
   uint32_t RWU    : 1;
   uint32_t RE     : 1;
@@ -54,6 +63,8 @@ struct USART_CR1
 
 struct USART_CR2
 {
+  using register_type = uint32_t;
+
   uint32_t ADD   : 4;
   uint32_t       : 1;
   uint32_t LBDL  : 1;
@@ -70,6 +81,8 @@ struct USART_CR2
 
 struct USART_CR3
 {
+  using register_type = uint32_t;
+
   uint32_t EIE    : 1;
   uint32_t IREN   : 1;
   uint32_t IRLP   : 1;
@@ -87,6 +100,8 @@ struct USART_CR3
 
 struct USART_GTPR
 {
+  using register_type = uint32_t;
+
   uint32_t PSC : 8;
   uint32_t GT  : 8;
   uint32_t     : 16;
@@ -95,15 +110,15 @@ struct USART_GTPR
 struct USART
 {
   /* 0x00 */
-  struct USART_SR SR;
-  struct USART_DR DR;
-  struct USART_BRR BRR;
-  struct USART_CR1 CR1;
+  Register<struct USART_SR> SR;
+  Register<struct USART_DR> DR;
+  Register<struct USART_BRR> BRR;
+  Register<struct USART_CR1> CR1;
 
   /* 0x10 */
-  struct USART_CR2 CR2;
-  struct USART_CR3 CR3;
-  struct USART_GTPR GTPR;
+  Register<struct USART_CR2> CR2;
+  Register<struct USART_CR3> CR3;
+  Register<struct USART_GTPR> GTPR;
 };
 
 extern volatile struct USART USART2;

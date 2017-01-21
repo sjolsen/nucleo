@@ -1,8 +1,8 @@
 #include "nucleo.h"
-#include "registers/flash.h"
-#include "registers/gpio.h"
-#include "registers/usart.h"
-#include "registers/rcc.h"
+#include "registers/flash.hh"
+#include "registers/gpio.hh"
+#include "registers/usart.hh"
+#include "registers/rcc.hh"
 #include <stdbool.h>
 
 #define CONFIG_CLOCKSOURCE_PLL
@@ -261,7 +261,11 @@ void uart_write(uint8_t byte)
   do SR = USART2.SR;
   while (!SR.TXE);
 
-  USART2.DR.DR = byte;
+  {
+    struct USART_DR DR = USART2.DR;
+    DR.DR = byte;
+    USART2.DR = DR;
+  }
 }
 
 static
@@ -281,20 +285,23 @@ int main(void)
   uart_init();
 
   uart_puts("RCC.CFGR.SWS = ");
-  uart_write('0' + RCC.CFGR.SWS);
+  struct RCC_CFGR CFGR = RCC.CFGR;
+  uart_write('0' + CFGR.SWS);
   uart_puts("\n");
 
 
   return 0;
 }
 
-void default_handler(__attribute__((unused)) struct armv7m_exception_frame* frame,
-                     __attribute__((unused)) uint32_t* exc_return)
+[[noreturn]]
+void default_handler([[gnu::unused]] struct armv7m_exception_frame* frame,
+                     [[gnu::unused]] uint32_t* exc_return)
 {
   halt();
 }
 
-void handle_irq(__attribute__((unused)) uint32_t irq)
+[[noreturn]]
+void handle_irq([[gnu::unused]] uint32_t irq)
 {
   halt();
 }

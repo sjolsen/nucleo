@@ -1,14 +1,13 @@
-#ifndef REGISTERS_RCC_H
-#define REGISTERS_RCC_H
+#ifndef REGISTERS_RCC_HH
+#define REGISTERS_RCC_HH
 
+#include "registers/register.hh"
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 struct RCC_CR
 {
+  using register_type = uint32_t;
+
   uint32_t HSION     : 1;
   uint32_t HSIRDY    : 1;
   uint32_t           : 1;
@@ -30,6 +29,8 @@ struct RCC_CR
 
 struct RCC_PLLCFGR
 {
+  using register_type = uint32_t;
+
   uint32_t PLLM   : 6;
   uint32_t PLLN   : 9;
   uint32_t        : 1;
@@ -58,6 +59,8 @@ enum
 
 struct RCC_CFGR
 {
+  using register_type = uint32_t;
+
   uint32_t SW      : 2;
   uint32_t SWS     : 2;
   uint32_t HPRE    : 4;
@@ -102,34 +105,12 @@ enum
   RCC_CFGR_PPRE_DIV16  = 7,
 };
 
-template <typename R>
-struct Register
-{
-  using register_type = typename R::register_type;
-
-  register_type raw;
-
-  operator R() const volatile& {
-    R result;
-    register_type raw_value = raw;
-    std::memcpy(result, raw_value, sizeof(raw_value));
-    return result;
-  }
-
-  volatile Register& operator = (const R& value) volatile& {
-    register_type raw_value;
-    std::memcpy(raw_value, value, sizeof(raw_value));
-    raw = raw_value;
-    return *this;
-  }
-};
-
 struct RCC
 {
   /* 0x00 */
-  Register<RCC_CR> CR;
-  Register<RCC_PLLCFGR> PLLCFGR;
-  Register<RCC_CFGR> CFGR;
+  Register<struct RCC_CR> CR;
+  Register<struct RCC_PLLCFGR> PLLCFGR;
+  Register<struct RCC_CFGR> CFGR;
   uint32_t CIR;
 
   /* 0x10 */
@@ -157,10 +138,6 @@ struct RCC
   uint32_t reserved_0x4C;
 };
 
-extern volatile struct RCC RCC;
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
+extern "C" volatile struct RCC RCC;
 
 #endif

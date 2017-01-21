@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* --- C function wrappers for ARM instructions --- */
 
 static inline __attribute__((always_inline))
@@ -78,5 +82,9 @@ void default_handler(struct armv7m_exception_frame* frame, uint32_t* exc_return)
 
 extern
 void handle_irq(uint32_t irq);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif
