@@ -300,7 +300,7 @@ int main(void)
   uart_write_dec(RCC.CFGR.SWS);
   uart_puts("\n");
 
-  __svc0(88);
+  __svc(0, 88);
 
   return 0;
 }
@@ -310,7 +310,7 @@ void handle_exception(uint32_t exc, struct armv7m_exception_frame* frame,
 {
   /* SVCall */
   if (exc == 11) {
-    const uint8_t* ret = (const void*)frame->PC;
+    const uint8_t* ret = (const uint8_t*)frame->PC;
     uint8_t imm = ret[-2];
     uint32_t arg = frame->R0;
 

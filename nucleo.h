@@ -18,10 +18,10 @@ void __wfi(void)
 }
 
 static inline __attribute__((always_inline))
-void __svc0(uint32_t arg)
+void __svc(uint8_t imm, uint32_t arg)
 {
   register uint32_t r0 __asm__("r0") = arg;
-  __asm__("svc #0" :: "r"(r0));
+  __asm__("svc %0" :: "I"(imm), "r"(r0));
 }
 
 __attribute__((noreturn))
