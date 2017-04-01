@@ -18,11 +18,10 @@ void __wfi(void)
 }
 
 static inline __attribute__((always_inline))
-uint32_t __read_ipsr(void)
+void __svc0(uint32_t arg)
 {
-  uint32_t result;
-  __asm__ volatile("mrs %0, ipsr" : "=r"(result));
-  return result;
+  register uint32_t r0 __asm__("r0") = arg;
+  __asm__("svc #0" :: "r"(r0));
 }
 
 __attribute__((noreturn))
@@ -42,27 +41,6 @@ struct __attribute__((packed)) armv7m_exception_frame
   uint32_t xPSR;
 };
 
-#define DECLARE_ISR(NAME, TARGET) \
-  __attribute__((used)) \
-  void TARGET(struct armv7m_exception_frame* frame, uint32_t* exc_return); \
-  \
-  extern __attribute__((naked)) \
-  void NAME(void) \
-  { \
-    __asm__( \
-      "mov r0, sp       \n" \
-      "sub r1, sp, #8   \n" \
-      "bic r1, #7       \n" \
-      "mov sp, r1       \n" \
-      "str lr, [sp]     \n" \
-      "str r0, [sp, #4] \n" \
-      "bl " #TARGET "   \n" \
-      "ldr lr, [sp]     \n" \
-      "ldr sp, [sp, #4] \n" \
-      "bx lr            \n" \
-    ); \
-  }
-
 /* --- Global symbols defined by the linker --- */
 
 extern unsigned char __stack_bottom[];
@@ -74,9 +52,7 @@ extern
 int main(void);
 
 extern
-void default_handler(struct armv7m_exception_frame* frame, uint32_t* exc_return);
-
-extern
-void handle_irq(uint32_t irq);
+void handle_exception(uint32_t exc, struct armv7m_exception_frame* frame,
+                      uint32_t* exc_return);
 
 #endif

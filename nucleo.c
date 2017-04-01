@@ -18,31 +18,24 @@ void __reset(void)
   halt();
 }
 
-DECLARE_ISR(__default_handler, default_handler);
-
-#define DEFAULT_ISR(NAME) \
-  extern __attribute__((naked)) __attribute__((weak, alias("__default_handler"))) \
-  void NAME(void); \
-
-DEFAULT_ISR(__nmi);
-DEFAULT_ISR(__hard_fault);
-DEFAULT_ISR(__mem_manage);
-DEFAULT_ISR(__bus_fault);
-DEFAULT_ISR(__usage_fault);
-DEFAULT_ISR(__svcall);
-DEFAULT_ISR(__debug_monitor);
-DEFAULT_ISR(__pendsv);
-DEFAULT_ISR(__systick);
-
-static
-void irq_entry(__attribute__((unused)) struct armv7m_exception_frame* frame,
-               __attribute__((unused)) uint32_t* exc_return)
+static __attribute__((naked))
+void __exception_entry(void)
 {
-  uint32_t ipsr = __read_ipsr();
-  uint32_t irq = ipsr & 0x1F;
-  handle_irq(irq);
+  __asm__(
+    "mov r1, sp          \n"
+    "sub r2, sp, #8      \n"
+    "bic r2, #7          \n"
+    "mov sp, r2          \n"
+    "str lr, [sp]        \n"
+    "str r1, [sp, #4]    \n"
+    "mrs r0, ipsr        \n"
+    "and r0, r0, #0x1F   \n"
+    "bl handle_exception \n"
+    "ldr lr, [sp]        \n"
+    "ldr sp, [sp, #4]    \n"
+    "bx lr               \n"
+  );
 }
-DECLARE_ISR(__irq_entry, irq_entry);
 
 #define N_IRQS 97
 
@@ -50,26 +43,7 @@ struct __attribute__((packed)) vector_table
 {
   void* sp_main;
   void (*reset)(void);
-
-  void (*nmi)(void);
-  void (*hard_fault)(void);
-  void (*mem_manage)(void);
-  void (*bus_fault)(void);
-  void (*usage_fault)(void);
-
-  void (*reserved_7)(void);
-  void (*reserved_8)(void);
-  void (*reserved_9)(void);
-  void (*reserved_10)(void);
-
-  void (*svcall)(void);
-  void (*debug_monitor)(void);
-
-  void (*reserved_13)(void);
-
-  void (*pendsv)(void);
-  void (*systick)(void);
-
+  void (*exceptions[14])(void);
   void (*irqs[N_IRQS])(void);
 };
 
@@ -78,17 +52,12 @@ const struct vector_table __vector_table;
 const struct vector_table __vector_table = {
   .sp_main       = &__stack_top,
   .reset         = &__reset,
-  .nmi           = &__nmi,
-  .hard_fault    = &__hard_fault,
-  .mem_manage    = &__mem_manage,
-  .bus_fault     = &__bus_fault,
-  .usage_fault   = &__usage_fault,
-  .svcall        = &__svcall,
-  .debug_monitor = &__debug_monitor,
-  .pendsv        = &__pendsv,
-  .systick       = &__systick,
+
+  .exceptions = {
+    [0 ... 13] = &__exception_entry,
+  },
 
   .irqs = {
-    [0 ... N_IRQS - 1] = &__irq_entry,
+    [0 ... N_IRQS - 1] = &__exception_entry,
   },
 };

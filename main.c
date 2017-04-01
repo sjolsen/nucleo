@@ -4,6 +4,7 @@
 #include "registers/usart.h"
 #include "registers/rcc.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 #define CONFIG_CLOCKSOURCE_PLL
 
@@ -274,6 +275,21 @@ void uart_puts(const char* str)
   }
 }
 
+static
+void uart_write_dec(uint32_t val)
+{
+  char buf[10];
+  size_t i = 0;
+
+  do {
+    buf[i++] = '0' + val % 10;
+    val /= 10;
+  } while (val != 0);
+
+  for (size_t j = i; j > 0; --j)
+    uart_write(buf[j - 1]);
+}
+
 int main(void)
 {
   clock_init();
@@ -281,20 +297,29 @@ int main(void)
   uart_init();
 
   uart_puts("RCC.CFGR.SWS = ");
-  uart_write('0' + RCC.CFGR.SWS);
+  uart_write_dec(RCC.CFGR.SWS);
   uart_puts("\n");
 
+  __svc0(88);
 
   return 0;
 }
 
-void default_handler(__attribute__((unused)) struct armv7m_exception_frame* frame,
-                     __attribute__((unused)) uint32_t* exc_return)
+void handle_exception(uint32_t exc, struct armv7m_exception_frame* frame,
+                      __attribute__((unused)) uint32_t* exc_return)
 {
-  halt();
-}
+  /* SVCall */
+  if (exc == 11) {
+    const uint8_t* ret = (const void*)frame->PC;
+    uint8_t imm = ret[-2];
+    uint32_t arg = frame->R0;
 
-void handle_irq(__attribute__((unused)) uint32_t irq)
-{
+    uart_puts("SVCall #");
+    uart_write_dec(imm);
+    uart_puts(" (");
+    uart_write_dec(arg);
+    uart_puts(")\n");
+  }
+
   halt();
 }
