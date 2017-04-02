@@ -194,6 +194,42 @@ void gpio_init(void)
     GPIOA.AFRL = AFRL;
   }
   /* ------ TODO: Document --->8- */
+
+  #define REG32(addr) (*(volatile uint32_t*)(addr))
+
+  #define EXTI_BASE 0x40013C00
+  #define EXTI_IMR  REG32(EXTI_BASE + 0x00)
+  #define EXTI_FTSR REG32(EXTI_BASE + 0x0C)
+  #define EXTI_PR   REG32(EXTI_BASE + 0x14)
+
+  #define SYSCFG_BASE    0x40013800
+  #define SYSCFG_EXTICR4 REG32(SYSCFG_BASE + 0x14)
+
+  #define NVIC_ISER(x) REG32(0XE000E100 + 4 * (x))
+  #define NVIC_ICPR(x) REG32(0XE000E280 + 4 * (x))
+
+  #define IRQ_EXTI15_10 40
+
+  // Configure PC13 for interrupts
+  {
+    uint32_t MODER = GPIOC.MODER;
+    MODER &= ~(3 << 26);
+    MODER |= GPIO_MODER_INPUT << 26;
+    GPIOC.MODER = MODER;
+  }
+  EXTI_FTSR |= (1 << 13);
+  EXTI_IMR  |= (1 << 13);
+  {
+    RCC.APB2ENR  |= (1 << 14);
+    RCC.APB2RSTR |= (1 << 14);
+    RCC.APB2RSTR &= ~(1 << 14);
+
+    uint32_t x = SYSCFG_EXTICR4;
+    x &= 0xF << 4;
+    x |= 0x2 << 4;
+    SYSCFG_EXTICR4 = x;
+  }
+  NVIC_ISER(IRQ_EXTI15_10 / 32) |= (1 << (IRQ_EXTI15_10 % 32));
 }
 
 static
@@ -296,9 +332,9 @@ int main(void)
   gpio_init();
   uart_init();
 
-  uart_puts("RCC.CFGR.SWS = ");
-  uart_write_dec(RCC.CFGR.SWS);
-  uart_puts("\n");
+  /* uart_puts("RCC.CFGR.SWS = "); */
+  /* uart_write_dec(RCC.CFGR.SWS); */
+  /* uart_puts("\n"); */
 
   __svc(0, 88);
 
@@ -308,6 +344,10 @@ int main(void)
 void handle_exception(uint32_t exc, struct armv7m_exception_frame* frame,
                       __attribute__((unused)) uint32_t* exc_return)
 {
+  uart_puts("Exception #");
+  uart_write_dec(exc);
+  uart_puts("\n");
+
   /* SVCall */
   if (exc == 11) {
     const uint8_t* ret = (const uint8_t*)frame->PC;
@@ -319,6 +359,11 @@ void handle_exception(uint32_t exc, struct armv7m_exception_frame* frame,
     uart_puts(" (");
     uart_write_dec(arg);
     uart_puts(")\n");
+  }
+
+  if (exc == 16 + IRQ_EXTI15_10) {
+    NVIC_ICPR(IRQ_EXTI15_10 / 32) = (1 << (IRQ_EXTI15_10 % 32));
+    EXTI_PR = (1 << 13);
   }
 
   halt();
