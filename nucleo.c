@@ -29,7 +29,7 @@ void __exception_entry(void)
     "str lr, [sp]        \n"
     "str r1, [sp, #4]    \n"
     "mrs r0, ipsr        \n"
-    "and r0, r0, #0x1F   \n"
+    "bfc r0, #9, #23     \n"
     "bl handle_exception \n"
     "ldr lr, [sp]        \n"
     "ldr sp, [sp, #4]    \n"
