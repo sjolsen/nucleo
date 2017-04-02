@@ -129,6 +129,18 @@ struct RCC
   uint32_t APB2ENR;
   uint32_t reserved_0x48;
   uint32_t reserved_0x4C;
+
+  /* 0x50 */
+  uint32_t AHB1LPENR;
+  uint32_t AHB2LPENR;
+  uint32_t AHB3LPENR;
+  uint32_t reserved_0x5C;
+
+  /* 0x60 */
+  uint32_t APB1LPENR;
+  uint32_t APB2LPENR;
+  uint32_t reserved_0x68;
+  uint32_t reserved_0x6C;
 };
 
 extern volatile struct RCC RCC;
