@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "irq.h"
+
 #define CONFIG_CLOCKSOURCE_PLL
 
 static
@@ -195,18 +197,14 @@ void gpio_init(void)
   }
   /* ------ TODO: Document --->8- */
 
-  #define REG32(addr) (*(volatile uint32_t*)(addr))
-
   #define EXTI_BASE 0x40013C00
   #define EXTI_IMR  REG32(EXTI_BASE + 0x00)
+  #define EXTI_RTSR REG32(EXTI_BASE + 0x08)
   #define EXTI_FTSR REG32(EXTI_BASE + 0x0C)
   #define EXTI_PR   REG32(EXTI_BASE + 0x14)
 
   #define SYSCFG_BASE    0x40013800
   #define SYSCFG_EXTICR4 REG32(SYSCFG_BASE + 0x14)
-
-  #define NVIC_ISER(x) REG32(0XE000E100 + 4 * (x))
-  #define NVIC_ICPR(x) REG32(0XE000E280 + 4 * (x))
 
   #define IRQ_EXTI15_10 40
 
@@ -217,8 +215,9 @@ void gpio_init(void)
     MODER |= GPIO_MODER_INPUT << 26;
     GPIOC.MODER = MODER;
   }
-  EXTI_FTSR |= (1 << 13);
   EXTI_IMR  |= (1 << 13);
+  EXTI_FTSR |= (1 << 13);
+  EXTI_PR    = (1 << 13);
   {
     RCC.APB2ENR  |= (1 << 14);
     RCC.APB2RSTR |= (1 << 14);
@@ -229,7 +228,11 @@ void gpio_init(void)
     x |= 0x2 << 4;
     SYSCFG_EXTICR4 = x;
   }
-  NVIC_ISER(IRQ_EXTI15_10 / 32) |= (1 << (IRQ_EXTI15_10 % 32));
+
+  irq_disable(IRQ_EXTI15_10);
+  irq_clear_pending(IRQ_EXTI15_10);
+  irq_set_priority(IRQ_EXTI15_10, 0xFF);
+  irq_enable(IRQ_EXTI15_10);
 }
 
 static
@@ -326,11 +329,25 @@ void uart_write_dec(uint32_t val)
     uart_write(buf[j - 1]);
 }
 
+static
+void disable_interrupts(void)
+{
+  __asm__("cpsid i");
+}
+
+static
+void enable_interrupts(void)
+{
+  __asm__("cpsie i");
+}
+
 int main(void)
 {
+  disable_interrupts();
   clock_init();
   gpio_init();
   uart_init();
+  enable_interrupts();
 
   /* uart_puts("RCC.CFGR.SWS = "); */
   /* uart_write_dec(RCC.CFGR.SWS); */
@@ -359,11 +376,15 @@ void handle_exception(uint32_t exc, struct armv7m_exception_frame* frame,
     uart_puts(" (");
     uart_write_dec(arg);
     uart_puts(")\n");
+
+    return;
   }
 
   if (exc == 16 + IRQ_EXTI15_10) {
     NVIC_ICPR(IRQ_EXTI15_10 / 32) = (1 << (IRQ_EXTI15_10 % 32));
     EXTI_PR = (1 << 13);
+
+    return;
   }
 
   halt();
